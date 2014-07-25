@@ -1,0 +1,14 @@
+
+*.class
+
+target/maven-archiver/pom.properties
+
+target/surefire-reports/com.itcs.commons.email.AppTest.txt
+
+target/surefire-reports/TEST-com.itcs.commons.email.AppTest.xml
+
+target/test-classes/.netbeans_automatic_build
+
+target/classes/.netbeans_automatic_build
+
+target/Email-1.0-SNAPSHOT.jar
