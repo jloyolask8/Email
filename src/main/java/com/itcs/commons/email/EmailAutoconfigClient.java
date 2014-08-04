@@ -66,7 +66,7 @@ public class EmailAutoconfigClient {
     public static final Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_STR_PATTERN, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     public static final Pattern DOMAIN_PATTERN = Pattern.compile(DOMAIN_STR_PATTERN, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     public static final String AUTOCONFIG_URL = "https://autoconfig.thunderbird.net/v1.1/";
-    public static final String MX_DNS_URL = "https://mx.thunderbird.net/dns/mx/";
+    public static final String MX_DNS_URL = "http://mx.thunderbird.net/dns/mx/";
     public static final String GOOGLE_MX = "aspmx.l.google.com";
     private static final Map<String, Document> settingsCache = new HashMap<String, Document>();
 
