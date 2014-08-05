@@ -23,13 +23,19 @@ import org.apache.commons.mail.EmailException;
 public class NoReplySystemMailSender {
 
 //    @Resource(mappedName = "java:mail/noReplyGodeskEmailSession")
-//    protected Session mailSession;
+    protected static Session noReplyGodeskEmailSession = null;
 
-    private Session getSession() throws NamingException {
-//        return mailSession;
-        Context ctx = new InitialContext();
-        Session session = (Session) ctx.lookup("mail/noReplyGodeskEmailSession");
-        return session;
+    /**
+     * Singleton pattern
+     * @return
+     * @throws NamingException 
+     */
+    private static Session getSession() throws NamingException {
+        if (noReplyGodeskEmailSession == null) {
+            Context ctx = new InitialContext();
+            noReplyGodeskEmailSession = (Session) ctx.lookup("mail/noReplyGodeskEmailSession");
+        }
+        return noReplyGodeskEmailSession;
     }
 
     /**
@@ -40,11 +46,11 @@ public class NoReplySystemMailSender {
      * @param attachments
      * @throws EmailException
      */
-    public void sendHTML(String to, String subject, String body, List<EmailAttachment> attachments) throws EmailException {
+    public static void sendHTML(String to, String subject, String body, List<EmailAttachment> attachments) throws EmailException {
         try {
-            getExecutorService().execute(new RunnableSendHTMLEmail(this.getSession(), new String[]{to}, subject, body, attachments));
+            getExecutorService().execute(new RunnableSendHTMLEmail(getSession(), new String[]{to}, subject, body, attachments));
         } catch (NamingException ex) {
-            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "el nombre jndi de la session de email esta mal!!!", ex);
+            Logger.getLogger(NoReplySystemMailSender.class.getName()).log(Level.INFO, "el nombre jndi de la session de email esta mal configurado!!", ex);
         }
     }
 
@@ -56,11 +62,11 @@ public class NoReplySystemMailSender {
      * @param attachments
      * @throws EmailException
      */
-    public void sendHTML(String[] to, String subject, String body, List<EmailAttachment> attachments) throws EmailException {
+    public static void sendHTML(String[] to, String subject, String body, List<EmailAttachment> attachments) throws EmailException {
         try {
-            getExecutorService().execute(new RunnableSendHTMLEmail(this.getSession(), to, subject, body, attachments));
+            getExecutorService().execute(new RunnableSendHTMLEmail(getSession(), to, subject, body, attachments));
         } catch (NamingException ex) {
-             Logger.getLogger(this.getClass().getName()).log(Level.INFO, "el nombre jndi de la session de email esta mal!!!", ex);
+            Logger.getLogger(NoReplySystemMailSender.class.getName()).log(Level.INFO, "el nombre jndi de la session de email esta mal configurado!!", ex);
         }
     }
 }
