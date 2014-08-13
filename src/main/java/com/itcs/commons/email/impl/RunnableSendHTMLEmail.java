@@ -53,7 +53,7 @@ public class RunnableSendHTMLEmail implements Runnable {
             // set the html message
             email.setHtmlMsg(body);
             email.setFrom(getSession().getProperties().getProperty(Email.MAIL_SMTP_FROM, getSession().getProperties().getProperty(Email.MAIL_SMTP_USER) ),
-                    getSession().getProperties().getProperty(Email.MAIL_SMTP_FROMNAME, getSession().getProperties().getProperty(Email.MAIL_SMTP_USER)));
+                    getSession().getProperties().getProperty(Email.MAIL_SMTP_FROMNAME, getSession().getProperties().getProperty(Email.MAIL_SMTP_USER)), "UTF-8");
             // set the alternative message
             email.setTextMsg("Si ve este mensaje, significa que su cliente de correo no permite mensajes HTML.");
             // send the email
