@@ -128,7 +128,7 @@ public class HtmlEmail extends MultiPartEmail
     {
         if (EmailUtils.isEmpty(aText))
         {
-            throw new EmailException("Invalid message supplied");
+            throw new EmailException("Invalid message supplied (message is empty)");
         }
 
         this.text = aText;
@@ -148,7 +148,7 @@ public class HtmlEmail extends MultiPartEmail
     {
         if (EmailUtils.isEmpty(aHtml))
         {
-            throw new EmailException("Invalid message supplied");
+            throw new EmailException("Invalid message supplied (message is empty)");
         }
 
         this.html = aHtml;
@@ -174,7 +174,7 @@ public class HtmlEmail extends MultiPartEmail
     {
         if (EmailUtils.isEmpty(msg))
         {
-            throw new EmailException("Invalid message supplied");
+            throw new EmailException("Invalid message supplied (message is empty)");
         }
 
         setTextMsg(msg);

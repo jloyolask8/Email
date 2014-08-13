@@ -8,6 +8,7 @@ package com.itcs.commons.email.impl;
 import com.itcs.commons.email.EmailClient;
 import static com.itcs.commons.email.EmailClient.DISABLE_MAX_ATTACHMENTS_SIZE;
 import static com.itcs.commons.email.EmailClient.MAX_ATTACHMENTS_SIZE_PROP_NAME;
+import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,8 +41,7 @@ public class RunnableSendHTMLEmail implements Runnable {
     }
 
     public void run() {
-        System.out.println("executing Asynchronous task RunnableSendHTMLEmail");
-
+        Logger.getLogger(RunnableSendHTMLEmail.class.getName()).log(Level.INFO, "executing Asynchronous task RunnableSendHTMLEmail");
         try {
             HtmlEmail email = new HtmlEmail();
             email.setCharset("utf-8");
@@ -60,27 +60,22 @@ public class RunnableSendHTMLEmail implements Runnable {
             if (attachments != null) {
                 addAttachments(email, attachments);
             }
-
-            email.send();            
-
-            System.out.println("email sent ok");
-        } catch (Exception e) {
-            System.out.println("error sending email...");
-            e.printStackTrace();
+            email.send();
+        } catch (EmailException e) {
+            Logger.getLogger(RunnableSendHTMLEmail.class.getName()).log(Level.SEVERE, "EmailException Error sending email..", e);
         }
-
     }
 
     private void addAttachments(MultiPartEmail email, List<EmailAttachment> attachments) throws EmailException {
 
         if (attachments != null && attachments.size() > 0) {
             String maxStringValue = getSession().getProperty(MAX_ATTACHMENTS_SIZE_PROP_NAME);
-            System.out.println("maxStringValue= " + maxStringValue);
+//            System.out.println("maxStringValue= " + maxStringValue);
             long maxAttachmentSize = DISABLE_MAX_ATTACHMENTS_SIZE;
             try {
                 maxAttachmentSize = Long.parseLong(maxStringValue);
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (NumberFormatException e) {
+                Logger.getLogger(RunnableSendHTMLEmail.class.getName()).log(Level.WARNING, "DISABLE_MAX_ATTACHMENTS_SIZE MailSession does not have property " + MAX_ATTACHMENTS_SIZE_PROP_NAME);
             }
 
             long size = 0;
@@ -95,8 +90,10 @@ public class RunnableSendHTMLEmail implements Runnable {
                 if (attach.getData() != null) {
                     try {
                         email.attach(new ByteArrayDataSource(attach.getData(), attach.getMimeType()), attach.getName(), attach.getMimeType());
-                    } catch (Exception e) {
-                        throw new EmailException("Attchment has errors," + e.getMessage());
+                    } catch (IOException e) {
+                        throw new EmailException("IOException Attachment has errors," + e.getMessage());
+                    } catch (EmailException e) {
+                        throw new EmailException("EmailException Attachment has errors," + e.getMessage());
                     }
                 } else {
                     email.attach(attach);
@@ -121,5 +118,4 @@ public class RunnableSendHTMLEmail implements Runnable {
         this.session = session;
     }
 
-   
 }
