@@ -62,7 +62,7 @@ public class RunnableSendHTMLEmail implements Runnable {
             }
             email.send();
         } catch (EmailException e) {
-            Logger.getLogger(RunnableSendHTMLEmail.class.getName()).log(Level.SEVERE, "EmailException Error sending email..", e);
+            Logger.getLogger(RunnableSendHTMLEmail.class.getName()).log(Level.SEVERE, "EmailException Error sending email... with properties:\n" + session.getProperties(), e);
         }
     }
 
