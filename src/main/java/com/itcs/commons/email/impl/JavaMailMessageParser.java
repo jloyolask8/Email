@@ -16,8 +16,11 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
+import javax.mail.Session;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.commons.mail.EmailAttachment;
 
 /**
@@ -51,14 +54,13 @@ public class JavaMailMessageParser {
      * @return
      * @throws MessagingException
      */
-    public EmailMessage parse(Message message) throws MessagingException {
+    public EmailMessage parse(Session session, Message message) throws MessagingException {
         /*
          * Using isMimeType to determine the content type avoids
          * fetching the actual content data until we need it.
          */
 
 //        Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
-
         EmailMessage emailMessage = new EmailMessage(message);
         emailMessage.setSubject(message.getSubject());
 
@@ -85,15 +87,23 @@ public class JavaMailMessageParser {
         }
 
         try {
-            if (processMimeMessage((MimeMessage)message,"text/*")) {
+            if (processMimeMessage((MimeMessage) message, "text/*")) {
                 String s = (String) message.getContent();
                 emailMessage.setText(s);
-                emailMessage.setTextIsHtml(processMimeMessage((MimeMessage)message,"text/html"));
+                emailMessage.setTextIsHtml(processMimeMessage((MimeMessage) message, "text/html"));
 
-            } else if (processMimeMessage((MimeMessage)message,"multipart/*")) {
+            } else if (processMimeMessage((MimeMessage) message, "multipart/*")) {
 
-                Multipart multipart = (Multipart) message.getContent();
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                message.writeTo(bos);
+                bos.close();
+                SharedByteArrayInputStream bis
+                        = new SharedByteArrayInputStream(bos.toByteArray());
+                MimeMessage cmsg = new MimeMessage(session, bis);
+                cmsg.getContent();
+                Multipart multipart = (Multipart) cmsg.getContent();
                 analyzeMultipart(multipart, emailMessage);
+                bis.close();
             } else {
                 /*
                  * If we actually want to see the data, and it's not a

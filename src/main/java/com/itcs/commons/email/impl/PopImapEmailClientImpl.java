@@ -160,7 +160,7 @@ public class PopImapEmailClientImpl implements EmailClient {
         Message[] msgs = folder.search(ft);
         for (Message m : msgs) {
 //            printHeaders(m);
-            result.add(parser.parse(m));
+            result.add(parser.parse(mailSession, m));
         }
         return result;
     }
@@ -172,7 +172,7 @@ public class PopImapEmailClientImpl implements EmailClient {
         Message[] msgs = folder.getMessages();
         for (Message m : msgs) {
 //            printHeaders(m);
-            result.add(parser.parse(m));
+            result.add(parser.parse(mailSession, m));
         }
         return result;
     }
