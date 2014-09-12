@@ -32,6 +32,9 @@ import org.jsoup.parser.Parser;
  */
 public class EmailAutoconfigClient {
 
+    private final static int DEFAULT_CONN_TIMEOUT = 60 * 1000;
+    private final static int DEFAULT_IO_TIMEOUT = 10 * 60 * 1000;
+
     private static final String MAIL_DEBUG = "mail.debug";
     private static final String MAIL_SMTP_HOST = "mail.smtp.host";
     private static final String MAIL_SMTP_PORT = "mail.smtp.port";
@@ -54,13 +57,21 @@ public class EmailAutoconfigClient {
     private static final String MAIL_POP_USER = "mail.pop3s.user";
     private static final String MAIL_POP_PASSWORD = "mail.pop3s.password";
     private static final String MAIL_POP_SSL_ENABLED = "mail.pop3s.ssl.enable";
+    //Socket connection timeout value in milliseconds. Default is infinite timeout.
+    private static final String MAIL_POP3S_CONN_TIMEOUT = "mail.pop3s.connectiontimeout";
+    //Socket I/O timeout value in milliseconds. Default is infinite timeout.
+    private static final String MAIL_POP3S_SOCKETIO_TIMEOUT = "mail.pop3s.timeout";
     //----------
     private static final String MAIL_IMAPS_HOST = "mail.imaps.host";
     private static final String MAIL_IMAPS_PORT = "mail.imaps.port";
     private static final String MAIL_IMAPS_USER = "mail.imaps.user";
     private static final String MAIL_IMAPS_PASSWORD = "mail.imaps.password";
     private static final String MAIL_IMAPS_SSL_ENABLED = "mail.imaps.ssl.enable";
-
+    //Socket connection timeout value in milliseconds. Default is infinite timeout.
+    private static final String MAIL_IMAPS_CONN_TIMEOUT = "mail.imaps.connectiontimeout";
+    //Socket I/O timeout value in milliseconds. Default is infinite timeout.
+    private static final String MAIL_IMAPS_SOCKETIO_TIMEOUT = "mail.imaps.timeout";
+    //----------
     public static final String EMAIL_STR_PATTERN = "[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\\.)+[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?";
     public static final String DOMAIN_STR_PATTERN = "(.*)(@)(.*)";
     public static final Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_STR_PATTERN, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
@@ -89,9 +100,8 @@ public class EmailAutoconfigClient {
         }
         return null;
     }
-    
-    public static Map<String, String> getAllServerSettings(String emailAddress, String type)
-    {
+
+    public static Map<String, String> getAllServerSettings(String emailAddress, String type) {
         if (existsAutoconfigSettings(emailAddress)) {
             try {
                 String domain = "gmail.com";
@@ -127,6 +137,9 @@ public class EmailAutoconfigClient {
         Properties props = new Properties();
         if (settings.get(EnumEmailSettingKeys.STORE_PROTOCOL.getKey()).equalsIgnoreCase("imaps")) {
 
+            props.put(MAIL_IMAPS_CONN_TIMEOUT, DEFAULT_CONN_TIMEOUT);
+            props.put(MAIL_IMAPS_SOCKETIO_TIMEOUT, DEFAULT_IO_TIMEOUT);
+
             if (settings.containsKey(EnumEmailSettingKeys.INBOUND_SERVER.getKey())
                     && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.INBOUND_SERVER.getKey()))) {
                 props.put(MAIL_IMAPS_HOST, settings.get(EnumEmailSettingKeys.INBOUND_SERVER.getKey()));
@@ -151,6 +164,10 @@ public class EmailAutoconfigClient {
             }
 
         } else if (settings.get(EnumEmailSettingKeys.STORE_PROTOCOL.getKey()).equalsIgnoreCase("pop3s")) {
+
+            props.put(MAIL_POP3S_CONN_TIMEOUT, DEFAULT_CONN_TIMEOUT);
+            props.put(MAIL_POP3S_SOCKETIO_TIMEOUT, DEFAULT_IO_TIMEOUT);
+
             if (settings.containsKey(EnumEmailSettingKeys.INBOUND_SERVER.getKey())
                     && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.INBOUND_SERVER.getKey()))) {
                 props.put(MAIL_POP_HOST, settings.get(EnumEmailSettingKeys.INBOUND_SERVER.getKey()));

@@ -66,7 +66,8 @@ public class NoReplySystemMailSender {
         try {
             getExecutorService().execute(new RunnableSendHTMLEmail(getSession(), to, subject, body, attachments));
         } catch (NamingException ex) {
-            Logger.getLogger(NoReplySystemMailSender.class.getName()).log(Level.INFO, "el nombre jndi de la session de email esta mal configurado!!", ex);
+            Logger.getLogger(NoReplySystemMailSender.class.getName()).log(Level.INFO, "El nombre jndi de la session de email esta mal configurado!!", ex);
+            throw new EmailException("El nombre jndi de la session de email esta mal configurado!!");
         }
     }
 }
