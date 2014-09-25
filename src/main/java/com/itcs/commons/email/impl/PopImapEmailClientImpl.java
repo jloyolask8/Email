@@ -247,8 +247,12 @@ public class PopImapEmailClientImpl implements EmailClient {
      */
     @Override
     public void sendHTML(String[] to, String subject, String body, List<EmailAttachment> attachments) throws EmailException {
+        sendHTML(to, null, null, subject, body, attachments);
+    }
+    
+    public void sendHTML(String[] to, String[] cc, String[] cco, String subject, String body, List<EmailAttachment> attachments) throws EmailException {
         try {
-            getExecutorService().execute(new RunnableSendHTMLEmail(getSession(), to, subject, body, attachments));
+            getExecutorService().execute(new RunnableSendHTMLEmail(getSession(), to, cc, cco, subject, body, attachments));
         } catch (NamingException ex) {
             Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.SEVERE, "sendHTML", ex);
         }
@@ -369,9 +373,4 @@ public class PopImapEmailClientImpl implements EmailClient {
             System.out.println("[" + header.getName() + "]=" + header.getValue());
         }
     }
-
-    
-
-    
-
 }

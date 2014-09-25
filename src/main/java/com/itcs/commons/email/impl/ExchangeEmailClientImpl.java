@@ -404,4 +404,8 @@ public class ExchangeEmailClientImpl implements EmailClient {
     public void sendHTML(String[] to, String subject, String body, List<EmailAttachment> attachments) throws EmailException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+    public void sendHTML(String[] to, String[] cc, String[] cco, String subject, String body, List<EmailAttachment> attachments) throws EmailException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }

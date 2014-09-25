@@ -140,4 +140,16 @@ public interface EmailClient {
      * @throws EmailException
      */
     void sendHTML(String[] to, String subject, String body, List<EmailAttachment> attachments) throws EmailException;
+    
+    /**
+     *
+     * @param to
+     * @param cc
+     * @param cco
+     * @param subject
+     * @param body
+     * @param attachments
+     * @throws EmailException
+     */
+    void sendHTML(String[] to, String[] cc, String[] cco,String subject, String body, List<EmailAttachment> attachments) throws EmailException;
 }
