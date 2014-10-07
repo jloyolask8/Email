@@ -32,8 +32,8 @@ import org.jsoup.parser.Parser;
  */
 public class EmailAutoconfigClient {
 
-    private final static int DEFAULT_CONN_TIMEOUT = 60 * 1000;
-    private final static int DEFAULT_IO_TIMEOUT = 10 * 60 * 1000;
+    private final static int DEFAULT_CONN_TIMEOUT = 60000;
+    private final static int DEFAULT_IO_TIMEOUT = 600000;
 
     private static final String MAIL_DEBUG = "mail.debug";
     private static final String MAIL_SMTP_HOST = "mail.smtp.host";
@@ -69,8 +69,10 @@ public class EmailAutoconfigClient {
     private static final String MAIL_IMAPS_SSL_ENABLED = "mail.imaps.ssl.enable";
     //Socket connection timeout value in milliseconds. Default is infinite timeout.
     private static final String MAIL_IMAPS_CONN_TIMEOUT = "mail.imaps.connectiontimeout";
+    private static final String MAIL_IMAP_CONN_TIMEOUT = "mail.imap.connectiontimeout";
     //Socket I/O timeout value in milliseconds. Default is infinite timeout.
     private static final String MAIL_IMAPS_SOCKETIO_TIMEOUT = "mail.imaps.timeout";
+    private static final String MAIL_IMAP_SOCKETIO_TIMEOUT = "mail.imap.timeout";
     //----------
     public static final String EMAIL_STR_PATTERN = "[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\\.)+[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?";
     public static final String DOMAIN_STR_PATTERN = "(.*)(@)(.*)";
@@ -139,6 +141,9 @@ public class EmailAutoconfigClient {
 
             props.put(MAIL_IMAPS_CONN_TIMEOUT, DEFAULT_CONN_TIMEOUT);
             props.put(MAIL_IMAPS_SOCKETIO_TIMEOUT, DEFAULT_IO_TIMEOUT);
+
+            props.put(MAIL_IMAP_CONN_TIMEOUT, DEFAULT_CONN_TIMEOUT);//Try imap even when using imaps
+            props.put(MAIL_IMAP_SOCKETIO_TIMEOUT, DEFAULT_IO_TIMEOUT);//Try imap even when using imaps
 
             if (settings.containsKey(EnumEmailSettingKeys.INBOUND_SERVER.getKey())
                     && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.INBOUND_SERVER.getKey()))) {

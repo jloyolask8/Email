@@ -119,7 +119,9 @@ public class PopImapEmailClientImpl implements EmailClient {
      *
      */
     public void disconnectStore() throws Exception {
-        store.close();
+        if (store != null) {
+            store.close();
+        }
     }
 
     /**
@@ -184,7 +186,9 @@ public class PopImapEmailClientImpl implements EmailClient {
      */
     @Override
     public void closeFolder() throws EmailException, MessagingException {
-        folder.close(true);
+        if (folder != null) {
+            folder.close(true);
+        }
     }
 
     /**
@@ -249,7 +253,7 @@ public class PopImapEmailClientImpl implements EmailClient {
     public void sendHTML(String[] to, String subject, String body, List<EmailAttachment> attachments) throws EmailException {
         sendHTML(to, null, null, subject, body, attachments);
     }
-    
+
     public void sendHTML(String[] to, String[] cc, String[] cco, String subject, String body, List<EmailAttachment> attachments) throws EmailException {
         try {
             getExecutorService().execute(new RunnableSendHTMLEmail(getSession(), to, cc, cco, subject, body, attachments));
@@ -257,7 +261,7 @@ public class PopImapEmailClientImpl implements EmailClient {
             Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.SEVERE, "sendHTML", ex);
         }
     }
-    
+
     public void sendText(String to, String subject, String body, List<EmailAttachment> attachments) throws EmailException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
@@ -299,6 +303,7 @@ public class PopImapEmailClientImpl implements EmailClient {
 //            email.send();
 //        }
 //    }
+
     /**
      * Supply a mail Session object to use. Please note that passing a username
      * and password (in the case of mail authentication) will create a new mail
@@ -333,7 +338,7 @@ public class PopImapEmailClientImpl implements EmailClient {
             throw new IllegalArgumentException("JNDI name missing");
         }
         InitialContext ic = new InitialContext();
-        return (Session)ic.lookup(jndiName);
+        return (Session) ic.lookup(jndiName);
 //        return ((Session) ic.lookup(jndiName));
     }
 
