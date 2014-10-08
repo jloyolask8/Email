@@ -33,7 +33,7 @@ import org.jsoup.parser.Parser;
 public class EmailAutoconfigClient {
 
     private final static int DEFAULT_CONN_TIMEOUT = 60000;
-    private final static int DEFAULT_IO_TIMEOUT = 600000;
+    private final static int DEFAULT_IO_TIMEOUT = 1200000;
 
     private static final String MAIL_DEBUG = "mail.debug";
     private static final String MAIL_SMTP_HOST = "mail.smtp.host";
