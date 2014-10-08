@@ -20,6 +20,7 @@ import javax.mail.Session;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.ParseException;
 import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.commons.mail.EmailAttachment;
 
@@ -149,7 +150,10 @@ public class JavaMailMessageParser {
             if (bodypart.getContentType().contains("multipart")) {
                 analyzeMultipart((Multipart) bodypart.getContent(), emailMessage);
             }
-            String disposition = bodypart.getDisposition();
+            String disposition = null;
+            try {
+                disposition = bodypart.getDisposition();
+            } catch (ParseException ex) {/*can throw a parseException, this is a normal behaviour*/}
             // many mailers don't include a Content-Disposition
             if (disposition != null && disposition.equalsIgnoreCase(Part.ATTACHMENT)) {
                 String filename = bodypart.getFileName();
