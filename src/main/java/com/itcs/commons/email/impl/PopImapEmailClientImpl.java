@@ -76,7 +76,7 @@ public class PopImapEmailClientImpl implements EmailClient {
 
         if (mailSession == null) {
             if (useJNDI == true && jndiName != null && !jndiName.isEmpty()) {
-                System.out.println("jndi");
+                System.out.println("loading jndi session...");
                 this.mailSession = getMailSessionFromJNDI(jndiName);
             } else {
 //            System.out.println("local");
@@ -91,6 +91,8 @@ public class PopImapEmailClientImpl implements EmailClient {
             
             Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "created New JavaMail Session: {0}", mailSession);
             
+        }else{
+            Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Using existing JavaMail Session: {0}", mailSession);
         }
 
         return mailSession;
@@ -123,7 +125,7 @@ public class PopImapEmailClientImpl implements EmailClient {
      *
      */
     public void disconnectStore() throws Exception {
-        if (store != null) {
+        if (store != null && store.isConnected()) {
             store.close();
         }
     }
@@ -190,7 +192,7 @@ public class PopImapEmailClientImpl implements EmailClient {
      */
     @Override
     public void closeFolder() throws EmailException, MessagingException {
-        if (folder != null) {
+        if (folder != null && folder.isOpen()) {
             folder.close(true);
         }
     }

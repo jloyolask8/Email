@@ -146,7 +146,7 @@ public class JavaMailMessageParser {
         //emailMessage.setParts(nparts);
         for (int i = 0; i < nparts; i++) {
             BodyPart bodypart = multipart.getBodyPart(i);
-            System.out.println("bodypart.getContentType(): " + bodypart.getContentType());
+//            System.out.println("bodypart.getContentType(): " + bodypart.getContentType());
             if (bodypart.getContentType().contains("multipart")) {
                 analyzeMultipart((Multipart) bodypart.getContent(), emailMessage);
             }

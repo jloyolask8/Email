@@ -387,7 +387,7 @@ public class EmailAutoconfigClient {
                 settings.put(EnumEmailSettingKeys.INBOUND_SERVER.getKey(), element.select("hostname").text());
 //                System.out.println("element.select(\"port\"):" + element.select("port").text());
                 settings.put(EnumEmailSettingKeys.INBOUND_PORT.getKey(), element.select("port").text());
-                System.out.println("element.select(\"socketType\"):" + element.select("socketType").text());
+//                System.out.println("element.select(\"socketType\"):" + element.select("socketType").text());
                 settings.put(EnumEmailSettingKeys.INBOUND_SSL_ENABLED.getKey(), element.select("socketType").text().trim().equals("SSL") ? "true" : "false");
             }
         }

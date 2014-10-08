@@ -614,7 +614,7 @@ public abstract class Email {
      */
     private InternetAddress createInternetAddress(String email, String name, String charsetName)
             throws EmailException {
-        System.out.println("createInternetAddress(" + email + ", " + name + ", " + charsetName + ")");
+//        System.out.println("createInternetAddress(" + email + ", " + name + ", " + charsetName + ")");
         InternetAddress address = null;
 
         try {
@@ -635,7 +635,7 @@ public abstract class Email {
                 address.setPersonal(name, set.name());
             }
 
-            System.out.println("address:"+address);
+//            System.out.println("address:"+address);
             // run sanity check on new InternetAddress object; if this fails
             // it will throw AddressException.
             address.validate();
