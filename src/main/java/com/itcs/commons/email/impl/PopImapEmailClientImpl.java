@@ -88,15 +88,16 @@ public class PopImapEmailClientImpl implements EmailClient {
                 mailSession = Session.getInstance(mailConnectionProps, new DefaultAuthenticator(username, password));
 
             }
+            
+            Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "created New JavaMail Session: {0}", mailSession);
+            
         }
 
         return mailSession;
     }
 
     /**
-     *
-     * @throws EmailException
-     * @throws MessagingException
+     * toString
      */
     @Override
     public String toString() {
