@@ -7,7 +7,6 @@ package com.itcs.commons.email;
 
 import com.itcs.commons.email.impl.PopImapEmailClientImpl;
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
@@ -42,7 +41,7 @@ public class EmailAutoconfigClient {
     private static final String MAIL_SMTP_PASSWORD = "mail.smtp.password";
     private static final String MAIL_SMTP_FROM = "mail.smtp.from";
     private static final String MAIL_SMTP_FROMNAME = "mail.smtp.fromname";
-    private static final String MAIL_SMTP_AUTH = "mail.smtp.auth";
+//    private static final String MAIL_SMTP_AUTH = "mail.smtp.auth";
     private static final String MAIL_SMTP_SSL_ENABLE = "mail.smtp.ssl.enable";
     private static final String MAIL_SMTP_SOCKET_FACTORY_PORT = "mail.smtp.socketFactory.port";
     private static final String MAIL_SMTP_CONNECTIONTIMEOUT = "mail.smtp.connectiontimeout";

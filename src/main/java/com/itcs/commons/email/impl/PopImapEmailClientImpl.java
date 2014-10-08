@@ -74,19 +74,22 @@ public class PopImapEmailClientImpl implements EmailClient {
 
     private Session getSession() throws NamingException {
 
-        if (useJNDI == true && jndiName != null && !jndiName.isEmpty()) {
-            System.out.println("jndi");
-            this.mailSession = getMailSessionFromJNDI(jndiName);
-        } else {
+        if (mailSession == null) {
+            if (useJNDI == true && jndiName != null && !jndiName.isEmpty()) {
+                System.out.println("jndi");
+                this.mailSession = getMailSessionFromJNDI(jndiName);
+            } else {
 //            System.out.println("local");
-            username = mailConnectionProps.getProperty(Email.MAIL_SMTP_USER);
-            password = mailConnectionProps.getProperty(Email.MAIL_SMTP_PASSWORD);
+                username = mailConnectionProps.getProperty(Email.MAIL_SMTP_USER);
+                password = mailConnectionProps.getProperty(Email.MAIL_SMTP_PASSWORD);
 
             // only create a new mail session with an authenticator if
-            // authentication is required and no user name is given
-            mailSession = Session.getInstance(mailConnectionProps, new DefaultAuthenticator(username, password));
+                // authentication is required and no user name is given
+                mailSession = Session.getInstance(mailConnectionProps, new DefaultAuthenticator(username, password));
 
+            }
         }
+
         return mailSession;
     }
 
