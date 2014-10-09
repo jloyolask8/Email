@@ -101,7 +101,7 @@ public class JavaMailMessageParser {
                 SharedByteArrayInputStream bis
                         = new SharedByteArrayInputStream(bos.toByteArray());
                 MimeMessage cmsg = new MimeMessage(session, bis);
-                cmsg.getContent();
+//                cmsg.getContent();
                 Multipart multipart = (Multipart) cmsg.getContent();
                 analyzeMultipart(multipart, emailMessage);
                 bis.close();
@@ -175,7 +175,7 @@ public class JavaMailMessageParser {
             } else if (bodypart.isMimeType("image/*")) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 InputStream imageInputStream = bodypart.getInputStream();
-                byte[] bytes = new byte[1000];
+                byte[] bytes = new byte[16384];
                 int leidos = 0;
                 while ((leidos = imageInputStream.read(bytes)) > 0) {
                     baos.write(bytes, 0, leidos);
