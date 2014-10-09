@@ -66,6 +66,11 @@ public interface EmailClient {
     int getMessageCount() throws EmailException, MessagingException;
 
     int getUnreadMessageCount() throws EmailException, MessagingException;
+    
+    EmailMessage getMessage(int id) throws MessagingException;
+    
+    List<EmailMessage> getUnreadMessagesOnlyHeaders() throws EmailException, MessagingException;
+    
     /**
      *
      * @return @throws EmailException

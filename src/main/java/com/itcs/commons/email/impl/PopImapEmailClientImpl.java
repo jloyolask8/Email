@@ -154,6 +154,25 @@ public class PopImapEmailClientImpl implements EmailClient {
     public int getUnreadMessageCount() throws EmailException, MessagingException {
         return folder.getUnreadMessageCount();
     }
+    
+    @Override
+    public List<EmailMessage> getUnreadMessagesOnlyHeaders() throws EmailException, MessagingException {
+        List<EmailMessage> result = new LinkedList<EmailMessage>();
+        FlagTerm ft = new FlagTerm(new Flags(Flags.Flag.SEEN), false);
+        JavaMailMessageParser parser = new JavaMailMessageParser();
+        Message[] msgs = folder.search(ft);
+        for (Message msg : msgs) {
+            result.add(parser.parseOnlyHeader(mailSession, msg));
+        }
+        return result;
+    }
+    
+    @Override
+    public EmailMessage getMessage(int id) throws MessagingException
+    {
+        JavaMailMessageParser parser = new JavaMailMessageParser();
+        return parser.parse(mailSession, folder.getMessage(id));
+    }
 
     /**
      *
