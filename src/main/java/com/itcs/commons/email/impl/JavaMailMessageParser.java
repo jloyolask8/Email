@@ -51,6 +51,7 @@ public class JavaMailMessageParser {
 
     /**
      *
+     * @param session
      * @param message
      * @return
      * @throws MessagingException
