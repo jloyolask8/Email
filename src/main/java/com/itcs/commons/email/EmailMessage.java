@@ -16,8 +16,8 @@ import org.apache.commons.mail.EmailAttachment;
 public class EmailMessage implements Serializable {
 
     private Object theOriginalMessage;
-    private int idMessage;
-    private boolean hasAttachment;
+    private long idMessage;
+    private boolean hasAttachment = false;
     private boolean textIsHtml;
     private String subject;
     private String text;
@@ -184,14 +184,14 @@ public class EmailMessage implements Serializable {
     /**
      * @return the idMessage
      */
-    public int getIdMessage() {
+    public long getIdMessage() {
         return idMessage;
     }
 
     /**
      * @param idMessage the idMessage to set
      */
-    public void setIdMessage(int idMessage) {
+    public void setIdMessage(long idMessage) {
         this.idMessage = idMessage;
     }
 

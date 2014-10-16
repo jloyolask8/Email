@@ -195,6 +195,7 @@ public class JavaMailMessageParser {
                 att.setName(filename);
                 att.setMimeType(bodypart.getContentType());
                 emailMessage.addAttachment(att);
+                emailMessage.setHasAttachment(true);
             } else if (bodypart.isMimeType("image/*")) {
                 EmailAttachment attachment = new EmailAttachment();
                 attachment.setContentId(((MimeBodyPart) bodypart).getContentID());
@@ -220,6 +221,7 @@ public class JavaMailMessageParser {
                 attachment.setMimeType(bodypart.getContentType());
                 attachment.setDisposition(Part.INLINE);
                 emailMessage.addAttachment(attachment);
+                emailMessage.setHasAttachment(true);
             } else if (bodypart.isMimeType("text/plain")) {
                 if ((emailMessage.getText() == null) || (emailMessage.getText().isEmpty())) {
                     emailMessage.setText((String) bodypart.getContent());

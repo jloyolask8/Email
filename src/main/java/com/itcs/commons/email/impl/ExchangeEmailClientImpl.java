@@ -413,7 +413,11 @@ public class ExchangeEmailClientImpl implements EmailClient {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public EmailMessage getMessage(int id) throws MessagingException {
+    public EmailMessage getMessage(long id) throws MessagingException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public List<EmailMessage> getMessagesOnlyHeaders(long firstuid, long lastuid) throws EmailException, MessagingException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

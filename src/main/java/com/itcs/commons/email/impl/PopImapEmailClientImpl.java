@@ -23,6 +23,7 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
+import javax.mail.UIDFolder;
 import javax.mail.search.FlagTerm;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -162,16 +163,31 @@ public class PopImapEmailClientImpl implements EmailClient {
         JavaMailMessageParser parser = new JavaMailMessageParser();
         Message[] msgs = folder.search(ft);
         for (Message msg : msgs) {
-            result.add(parser.parseOnlyHeader(mailSession, msg));
+            EmailMessage parsedMessage = parser.parseOnlyHeader(mailSession, msg);
+            parsedMessage.setIdMessage(((UIDFolder)msg.getFolder()).getUID(msg));
+            result.add(parsedMessage);
         }
         return result;
     }
     
     @Override
-    public EmailMessage getMessage(int id) throws MessagingException
+    public List<EmailMessage> getMessagesOnlyHeaders(long firstuid, long lastuid) throws EmailException, MessagingException {
+        List<EmailMessage> result = new LinkedList<EmailMessage>();
+        JavaMailMessageParser parser = new JavaMailMessageParser();
+        Message[] msgs = ((UIDFolder)folder).getMessagesByUID(firstuid, lastuid);
+        for (Message msg : msgs) {
+            EmailMessage parsedMessage = parser.parseOnlyHeader(mailSession, msg);
+            parsedMessage.setIdMessage(((UIDFolder)msg.getFolder()).getUID(msg));
+            result.add(parsedMessage);
+        }
+        return result;
+    }
+    
+    @Override
+    public EmailMessage getMessage(long id) throws MessagingException
     {
         JavaMailMessageParser parser = new JavaMailMessageParser();
-        return parser.parse(mailSession, folder.getMessage(id));
+        return parser.parse(mailSession, ((UIDFolder)folder).getMessageByUID(id));
     }
 
     /**

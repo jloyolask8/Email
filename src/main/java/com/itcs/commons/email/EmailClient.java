@@ -6,6 +6,7 @@ package com.itcs.commons.email;
 
 import java.util.List;
 import javax.mail.MessagingException;
+import javax.mail.UIDFolder;
 import org.apache.commons.mail.EmailAttachment;
 import org.apache.commons.mail.EmailException;
 
@@ -67,9 +68,11 @@ public interface EmailClient {
 
     int getUnreadMessageCount() throws EmailException, MessagingException;
     
-    EmailMessage getMessage(int id) throws MessagingException;
+    EmailMessage getMessage(long id) throws MessagingException;
     
     List<EmailMessage> getUnreadMessagesOnlyHeaders() throws EmailException, MessagingException;
+    
+    List<EmailMessage> getMessagesOnlyHeaders(long firtsuid, long lastuid) throws EmailException, MessagingException;
     
     /**
      *
