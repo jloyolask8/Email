@@ -212,7 +212,9 @@ public class JavaMailMessageParser {
                     attachment.setData(baos.toByteArray());
                 }
 
-                attachment.setName(bodypart.getFileName());
+                try{
+                    attachment.setName(bodypart.getFileName());
+                }catch(Exception ex){/*do nothing, can be a parseException*/}
                 if (attachment.getName() == null) {
                     int startIndex = bodypart.getContentType().indexOf('/');
                     attachment.setName("image." + bodypart.getContentType().substring(startIndex + 1).toLowerCase());
