@@ -40,6 +40,8 @@ public enum EnumEmailSettingKeys {
     DOMINIO_EXCHANGE_SALIDA("dominio_exchange_salida"),
     DOMINIO_EXCHANGE_ENTRADA("dominio_exchange_inbound"),
     MAIL_SERVER_TYPE_SALIDA("mail_server_type_salida"),
+    DOWNLOAD_ATTACHMENTS("download_attachments"),
+    HIGHEST_UID("hightest_uid"),
     SMTP_SSL_ENABLED("mail_smtp_ssl_enable");
     
     private final String key;

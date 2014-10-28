@@ -197,7 +197,7 @@ public class EmailAttachment {
      * @return the size
      */
     public long getSize() {
-        if (this.data != null) {
+        if (this.data != null && (size == 0)) {
             return this.data.length;
         }
         return size;

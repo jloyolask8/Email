@@ -48,15 +48,12 @@ public class JavaMailMessageParser {
             System.out.println("email: " + email);
         }
     }
-
-    /**
-     *
-     * @param session
-     * @param message
-     * @return
-     * @throws MessagingException
-     */
-    public EmailMessage parse(Session session, Message message) throws MessagingException {
+    
+    public EmailMessage parseOnlyHeader(Session session, Message message) throws MessagingException {
+        return parse(session, message, false);
+    }
+    
+    private EmailMessage parse(Session session, Message message, boolean download) throws MessagingException{
         /*
          * Using isMimeType to determine the content type avoids
          * fetching the actual content data until we need it.
@@ -64,6 +61,7 @@ public class JavaMailMessageParser {
 
 //        Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
         EmailMessage emailMessage = new EmailMessage(message);
+        emailMessage.setIdMessage(message.getMessageNumber());
         emailMessage.setSubject(message.getSubject());
 
         Pattern p = Pattern.compile(EXTRACT_MAIL_REGEXP, Pattern.DOTALL);
@@ -96,16 +94,26 @@ public class JavaMailMessageParser {
 
             } else if (processMimeMessage((MimeMessage) message, "multipart/*")) {
 
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                message.writeTo(bos);
-                bos.close();
-                SharedByteArrayInputStream bis
-                        = new SharedByteArrayInputStream(bos.toByteArray());
-                MimeMessage cmsg = new MimeMessage(session, bis);
-                cmsg.getContent();
-                Multipart multipart = (Multipart) cmsg.getContent();
-                analyzeMultipart(multipart, emailMessage);
-                bis.close();
+                long startTime = System.currentTimeMillis();
+                if(download)
+                {
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    message.writeTo(bos);
+                    bos.close();
+                    SharedByteArrayInputStream bis
+                            = new SharedByteArrayInputStream(bos.toByteArray());
+                    MimeMessage cmsg = new MimeMessage(session, bis);
+
+                    Multipart multipart = (Multipart) cmsg.getContent();
+                    analyzeMultipart(multipart, emailMessage, download);
+                    bis.close();
+                }
+                else
+                {
+                    analyzeMultipart((Multipart)message.getContent(), emailMessage, download);
+                }
+                long totalTime = System.currentTimeMillis() - startTime;
+                System.out.println("totalTime: "+ (((float)totalTime)/1000f)+" seg.");
             } else {
                 /*
                  * If we actually want to see the data, and it's not a
@@ -125,6 +133,16 @@ public class JavaMailMessageParser {
         return emailMessage;
     }
 
+    /**
+     *
+     * @param message
+     * @return
+     * @throws MessagingException
+     */
+    public EmailMessage parse(Session session, Message message) throws MessagingException {
+        return parse(session, message, true);
+    }
+
     public boolean processMimeMessage(MimeMessage msg, String mimeType) throws MessagingException {
         try {
             return msg.isMimeType(mimeType);
@@ -142,14 +160,14 @@ public class JavaMailMessageParser {
         }
     }
 
-    private void analyzeMultipart(Multipart multipart, EmailMessage emailMessage) throws MessagingException, IOException {
+    private void analyzeMultipart(Multipart multipart, EmailMessage emailMessage, boolean download) throws MessagingException, IOException {
         int nparts = multipart.getCount();
         //emailMessage.setParts(nparts);
         for (int i = 0; i < nparts; i++) {
             BodyPart bodypart = multipart.getBodyPart(i);
 //            System.out.println("bodypart.getContentType(): " + bodypart.getContentType());
             if (bodypart.getContentType().contains("multipart")) {
-                analyzeMultipart((Multipart) bodypart.getContent(), emailMessage);
+                analyzeMultipart((Multipart) bodypart.getContent(), emailMessage, download);
             }
             String disposition = null;
             try {
@@ -159,40 +177,53 @@ public class JavaMailMessageParser {
             if (disposition != null && disposition.equalsIgnoreCase(Part.ATTACHMENT)) {
                 String filename = bodypart.getFileName();
                 EmailAttachment att = new EmailAttachment();
-                InputStream is = bodypart.getInputStream();
-                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                int nRead;
-                byte[] data = new byte[16384];
-                while ((nRead = is.read(data, 0, data.length)) != -1) {
-                    buffer.write(data, 0, nRead);
+                if(download)
+                {
+                    InputStream is = bodypart.getInputStream();
+                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                    int nRead;
+                    byte[] data = new byte[131072];
+                    while ((nRead = is.read(data, 0, data.length)) != -1) {
+                        buffer.write(data, 0, nRead);
+                    }
+                    buffer.flush();
+                    byte[] bytearray = buffer.toByteArray();
+                    att.setData(bytearray);
                 }
-                buffer.flush();
-                byte[] bytearray = buffer.toByteArray();
-                att.setData(bytearray);
+                att.setSize(bodypart.getSize());
                 att.setDisposition(Part.ATTACHMENT);
                 att.setName(filename);
                 att.setMimeType(bodypart.getContentType());
                 emailMessage.addAttachment(att);
+                emailMessage.setHasAttachment(true);
             } else if (bodypart.isMimeType("image/*")) {
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                InputStream imageInputStream = bodypart.getInputStream();
-                byte[] bytes = new byte[1000];
-                int leidos = 0;
-                while ((leidos = imageInputStream.read(bytes)) > 0) {
-                    baos.write(bytes, 0, leidos);
-                }
-                baos.flush();
                 EmailAttachment attachment = new EmailAttachment();
                 attachment.setContentId(((MimeBodyPart) bodypart).getContentID());
-                attachment.setData(baos.toByteArray());
-                attachment.setName(bodypart.getFileName());
+                if(download)
+                {
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    InputStream imageInputStream = bodypart.getInputStream();
+                    byte[] bytes = new byte[131072];
+                    int leidos = 0;
+                    while ((leidos = imageInputStream.read(bytes)) > 0) {
+                        baos.write(bytes, 0, leidos);
+                    }
+                    baos.flush();
+                    attachment.setData(baos.toByteArray());
+                }
+
+                try{
+                    attachment.setName(bodypart.getFileName());
+                }catch(Exception ex){/*do nothing, can be a parseException*/}
                 if (attachment.getName() == null) {
                     int startIndex = bodypart.getContentType().indexOf('/');
                     attachment.setName("image." + bodypart.getContentType().substring(startIndex + 1).toLowerCase());
                 }
+                attachment.setSize(bodypart.getSize());
                 attachment.setMimeType(bodypart.getContentType());
                 attachment.setDisposition(Part.INLINE);
                 emailMessage.addAttachment(attachment);
+                emailMessage.setHasAttachment(true);
             } else if (bodypart.isMimeType("text/plain")) {
                 if ((emailMessage.getText() == null) || (emailMessage.getText().isEmpty())) {
                     emailMessage.setText((String) bodypart.getContent());
