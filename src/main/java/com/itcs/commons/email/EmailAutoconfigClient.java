@@ -28,51 +28,48 @@ import org.jsoup.parser.Parser;
 /**
  *
  * @author jorge
+ * Para agregar certificado:
+ * //Obtener el certificado para imap
+ * echo | openssl s_client -connect mail.beltec.cl:143 -starttls imap 2>&1 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > beltec.cer
+ * //Obtener el certificado para smtp
+ * echo | openssl s_client -connect mail.beltec.cl:25 -starttls smtp 2>&1 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > beltec_smtp.cer
+ * //Agregar el certificado para Java
+ * sudo keytool -import -alias mail.beltec.cl -file beltec.cer -keystore /Library/Java/JavaVirtualMachines/jdk1.7.0_65.jdk/Contents/Home/jre/lib/security/jssecacerts
+ * //Agregar el certificado para glassfish en ambos keystores
+ * sudo keytool -import -alias mail.beltec.cl -file /Users/jorge/Documents/beltec.cer -keystore /Users/jorge/glassfish3/glassfish/domains/domain1/config/keystore.jks
+ * sudo keytool -import -alias smtp.beltec.cl -file /Users/jorge/Documents/beltec_smtp.cer -keystore /Users/jorge/glassfish3/glassfish/domains/domain1/config/cacerts.jks
  */
 public class EmailAutoconfigClient {
 
     private final static String DEFAULT_CONN_TIMEOUT = "60000";
     private final static String DEFAULT_IO_TIMEOUT = "1200000";
 
-    private static final String MAIL_DEBUG = "mail.debug";
-    private static final String MAIL_SMTP_HOST = "mail.smtp.host";
-    private static final String MAIL_SMTP_PORT = "mail.smtp.port";
-    private static final String MAIL_SMTP_USER = "mail.smtp.user";
-    private static final String MAIL_SMTP_PASSWORD = "mail.smtp.password";
-    private static final String MAIL_SMTP_FROM = "mail.smtp.from";
-    private static final String MAIL_SMTP_FROMNAME = "mail.smtp.fromname";
-//    private static final String MAIL_SMTP_AUTH = "mail.smtp.auth";
-    private static final String MAIL_SMTP_SSL_ENABLE = "mail.smtp.ssl.enable";
-    private static final String MAIL_SMTP_SOCKET_FACTORY_PORT = "mail.smtp.socketFactory.port";
-    private static final String MAIL_SMTP_CONNECTIONTIMEOUT = "mail.smtp.connectiontimeout";
-    private static final String MAIL_SMTP_TIMEOUT = "mail.smtp.timeout";
-    private static final String MAIL_TRANSPORT_TLS = "mail.smtp.starttls.enable";
+    private static final String MAIL = "mail";
+    private static final String PROTOCOL_SMTP = ".smtp";
+    private static final String PROTOCOL_IMAP = ".imap";
+    private static final String PROTOCOL_IMAPS = ".imaps";
+    private static final String PROTOCOL_POP3 = ".pop3";
+    private static final String PROTOCOL_POP3S = ".pop3s";
+    private static final String MAIL_DEBUG = MAIL + ".debug";
+    private static final String MAIL_PROTOCOL_HOST = ".host";
+    private static final String MAIL_PROTOCOL_PORT = ".port";
+    private static final String MAIL_PROTOCOL_USER = ".user";
+    private static final String MAIL_PROTOCOL_PASSWORD = ".password";
+    private static final String MAIL_PROTOCOL_FROM = ".from";
+    private static final String MAIL_PROTOCOL_FROMNAME = ".fromname";
+    private static final String MAIL_PROTOCOL_AUTH = ".auth";
+    private static final String MAIL_PROTOCOL_SSL_ENABLE = ".ssl.enable";
+    private static final String MAIL_PROTOCOL_SOCKET_FACTORY_PORT = ".socketFactory.port";
+    //Socket connection timeout value in milliseconds. Default is infinite timeout.
+    private static final String MAIL_PROTOCOL_CONNECTIONTIMEOUT = ".connectiontimeout";
+    //Socket I/O timeout value in milliseconds. Default is infinite timeout.
+    private static final String MAIL_PROTOCOL_TIMEOUT = ".timeout";
+    private static final String MAIL_PROTOCOL_STARTTLS = ".starttls.enable";
     //----------
     private static final String MAIL_TRANSPORT_PROTOCOL = "mail.transport.protocol";
     private static final String MAIL_STORE_PROTOCOL = "mail.store.protocol";
     //----------
-    private static final String MAIL_POP_HOST = "mail.pop3s.host";
-    private static final String MAIL_POP_PORT = "mail.pop3s.port";
-    private static final String MAIL_POP_USER = "mail.pop3s.user";
-    private static final String MAIL_POP_PASSWORD = "mail.pop3s.password";
-    private static final String MAIL_POP_SSL_ENABLED = "mail.pop3s.ssl.enable";
-    //Socket connection timeout value in milliseconds. Default is infinite timeout.
-    private static final String MAIL_POP3S_CONN_TIMEOUT = "mail.pop3s.connectiontimeout";
-    //Socket I/O timeout value in milliseconds. Default is infinite timeout.
-    private static final String MAIL_POP3S_SOCKETIO_TIMEOUT = "mail.pop3s.timeout";
-    //----------
-    private static final String MAIL_IMAPS_HOST = "mail.imaps.host";
-    private static final String MAIL_IMAPS_PORT = "mail.imaps.port";
-    private static final String MAIL_IMAPS_USER = "mail.imaps.user";
-    private static final String MAIL_IMAPS_PASSWORD = "mail.imaps.password";
-    private static final String MAIL_IMAPS_SSL_ENABLED = "mail.imaps.ssl.enable";
-    //Socket connection timeout value in milliseconds. Default is infinite timeout.
-    private static final String MAIL_IMAPS_CONN_TIMEOUT = "mail.imaps.connectiontimeout";
-    private static final String MAIL_IMAP_CONN_TIMEOUT = "mail.imap.connectiontimeout";
-    //Socket I/O timeout value in milliseconds. Default is infinite timeout.
-    private static final String MAIL_IMAPS_SOCKETIO_TIMEOUT = "mail.imaps.timeout";
-    private static final String MAIL_IMAP_SOCKETIO_TIMEOUT = "mail.imap.timeout";
-    //----------
+
     public static final String EMAIL_STR_PATTERN = "[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\\.)+[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?";
     public static final String DOMAIN_STR_PATTERN = "(.*)(@)(.*)";
     public static final Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_STR_PATTERN, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
@@ -134,133 +131,132 @@ public class EmailAutoconfigClient {
         return false;
     }
 
-    private static Properties generateEmailProperties(Map<String, String> settings) {
+    public static Properties generateEmailProperties(Map<String, String> settings) {
         Properties props = new Properties();
-        if (settings.get(EnumEmailSettingKeys.STORE_PROTOCOL.getKey()).equalsIgnoreCase("imaps")) {
 
-            props.put(MAIL_IMAPS_CONN_TIMEOUT, DEFAULT_CONN_TIMEOUT);
-            props.put(MAIL_IMAPS_SOCKETIO_TIMEOUT, DEFAULT_IO_TIMEOUT);
+        if (!StringUtils.isEmpty(settings.get(EnumEmailSettingKeys.MAIL_DEBUG.getKey()))) {
+            if (Boolean.parseBoolean(settings.get(EnumEmailSettingKeys.MAIL_DEBUG.getKey()))) {
+                props.put(MAIL_DEBUG, "true");
+            }
+        }
 
-            props.put(MAIL_IMAP_CONN_TIMEOUT, DEFAULT_CONN_TIMEOUT);//Try imap even when using imaps
-            props.put(MAIL_IMAP_SOCKETIO_TIMEOUT, DEFAULT_IO_TIMEOUT);//Try imap even when using imaps
+        if (settings.get(EnumEmailSettingKeys.STORE_PROTOCOL.getKey()).equalsIgnoreCase("imaps")
+                || settings.get(EnumEmailSettingKeys.STORE_PROTOCOL.getKey()).equalsIgnoreCase("imap")
+                || settings.get(EnumEmailSettingKeys.STORE_PROTOCOL.getKey()).equalsIgnoreCase("pop3s")) {
+
+            String baseProtocol = MAIL;
+            if (settings.get(EnumEmailSettingKeys.STORE_PROTOCOL.getKey()).equalsIgnoreCase("imaps")) {
+                baseProtocol += PROTOCOL_IMAPS;
+            } else if (settings.get(EnumEmailSettingKeys.STORE_PROTOCOL.getKey()).equalsIgnoreCase("imap")) {
+                baseProtocol += PROTOCOL_IMAP;
+            } else if (settings.get(EnumEmailSettingKeys.STORE_PROTOCOL.getKey()).equalsIgnoreCase("pop3s")) {
+                baseProtocol += PROTOCOL_POP3S;
+            }
+
+            props.put(baseProtocol + MAIL_PROTOCOL_CONNECTIONTIMEOUT, DEFAULT_CONN_TIMEOUT);
+            props.put(baseProtocol + MAIL_PROTOCOL_TIMEOUT, DEFAULT_IO_TIMEOUT);
 
             if (settings.containsKey(EnumEmailSettingKeys.INBOUND_SERVER.getKey())
                     && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.INBOUND_SERVER.getKey()))) {
-                props.put(MAIL_IMAPS_HOST, settings.get(EnumEmailSettingKeys.INBOUND_SERVER.getKey()));
+                props.put(baseProtocol + MAIL_PROTOCOL_HOST, settings.get(EnumEmailSettingKeys.INBOUND_SERVER.getKey()));
             }
 
             if (settings.containsKey(EnumEmailSettingKeys.INBOUND_PORT.getKey())) {
-                props.put(MAIL_IMAPS_PORT, settings.get(EnumEmailSettingKeys.INBOUND_PORT.getKey()));
+                props.put(baseProtocol + MAIL_PROTOCOL_PORT, settings.get(EnumEmailSettingKeys.INBOUND_PORT.getKey()));
             }
 
             if (settings.containsKey(EnumEmailSettingKeys.INBOUND_USER.getKey())
                     && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.INBOUND_USER.getKey()))) {
-                props.put(MAIL_IMAPS_USER, settings.get(EnumEmailSettingKeys.INBOUND_USER.getKey()));
+                props.put(baseProtocol + MAIL_PROTOCOL_USER, settings.get(EnumEmailSettingKeys.INBOUND_USER.getKey()));
             }
 
             if (settings.containsKey(EnumEmailSettingKeys.INBOUND_PASS.getKey())
                     && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.INBOUND_PASS.getKey()))) {
-                props.put(MAIL_IMAPS_PASSWORD, settings.get(EnumEmailSettingKeys.INBOUND_PASS.getKey()));
+                props.put(baseProtocol + MAIL_PROTOCOL_PASSWORD, settings.get(EnumEmailSettingKeys.INBOUND_PASS.getKey()));
             }
 
             if (settings.containsKey(EnumEmailSettingKeys.INBOUND_SSL_ENABLED.getKey())) {
-                props.put(MAIL_IMAPS_SSL_ENABLED, settings.get(EnumEmailSettingKeys.INBOUND_SSL_ENABLED.getKey()));
+                props.put(baseProtocol + MAIL_PROTOCOL_SSL_ENABLE, settings.get(EnumEmailSettingKeys.INBOUND_SSL_ENABLED.getKey()));
             }
 
-        } else if (settings.get(EnumEmailSettingKeys.STORE_PROTOCOL.getKey()).equalsIgnoreCase("pop3s")) {
-
-            props.put(MAIL_POP3S_CONN_TIMEOUT, DEFAULT_CONN_TIMEOUT);
-            props.put(MAIL_POP3S_SOCKETIO_TIMEOUT, DEFAULT_IO_TIMEOUT);
-
-            if (settings.containsKey(EnumEmailSettingKeys.INBOUND_SERVER.getKey())
-                    && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.INBOUND_SERVER.getKey()))) {
-                props.put(MAIL_POP_HOST, settings.get(EnumEmailSettingKeys.INBOUND_SERVER.getKey()));
+            if (settings.containsKey(EnumEmailSettingKeys.INBOUND_STARTTLS.getKey())) {
+                props.put(baseProtocol + MAIL_PROTOCOL_STARTTLS, settings.get(EnumEmailSettingKeys.INBOUND_STARTTLS.getKey()));
+                props.put(baseProtocol + ".socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+                props.put(baseProtocol + MAIL_PROTOCOL_AUTH, "true");
+                props.put(baseProtocol + ".ssl.trust", "*");
+                props.put(baseProtocol + ".starttls.trust", "*");
             }
 
-            if (settings.containsKey(EnumEmailSettingKeys.INBOUND_PORT.getKey())) {
-                props.put(MAIL_POP_PORT, settings.get(EnumEmailSettingKeys.INBOUND_PORT.getKey()));
-            }
-
-            if (settings.containsKey(EnumEmailSettingKeys.INBOUND_USER.getKey())
-                    && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.INBOUND_USER.getKey()))) {
-                props.put(MAIL_POP_USER, settings.get(EnumEmailSettingKeys.INBOUND_USER.getKey()));
-            }
-
-            if (settings.containsKey(EnumEmailSettingKeys.INBOUND_PASS.getKey())
-                    && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.INBOUND_PASS.getKey()))) {
-                props.put(MAIL_POP_PASSWORD, settings.get(EnumEmailSettingKeys.INBOUND_PASS.getKey()));
-            }
-
-            if (settings.containsKey(EnumEmailSettingKeys.INBOUND_SSL_ENABLED.getKey())) {
-                props.put(MAIL_POP_SSL_ENABLED, settings.get(EnumEmailSettingKeys.INBOUND_SSL_ENABLED.getKey()));
-            }
         }
         if (settings.containsKey(EnumEmailSettingKeys.SMTP_SERVER.getKey())
                 && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.SMTP_SERVER.getKey()))) {
-            props.put(MAIL_SMTP_HOST, settings.get(EnumEmailSettingKeys.SMTP_SERVER.getKey()));
+            props.put(MAIL + PROTOCOL_SMTP + MAIL_PROTOCOL_HOST, settings.get(EnumEmailSettingKeys.SMTP_SERVER.getKey()));
         }
 
         if (settings.containsKey(EnumEmailSettingKeys.SMTP_PORT.getKey())
                 && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.SMTP_PORT.getKey()))) {
-            props.put(MAIL_SMTP_PORT, settings.get(EnumEmailSettingKeys.SMTP_PORT.getKey()));
+            props.put(MAIL + PROTOCOL_SMTP + MAIL_PROTOCOL_PORT, settings.get(EnumEmailSettingKeys.SMTP_PORT.getKey()));
         }
 
         if (settings.containsKey(EnumEmailSettingKeys.SMTP_USER.getKey())
                 && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.SMTP_USER.getKey()))) {
-            props.put(MAIL_SMTP_USER, settings.get(EnumEmailSettingKeys.SMTP_USER.getKey()));
+            props.put(MAIL + PROTOCOL_SMTP + MAIL_PROTOCOL_USER, settings.get(EnumEmailSettingKeys.SMTP_USER.getKey()));
         }
 
         if (settings.containsKey(EnumEmailSettingKeys.SMTP_PASS.getKey())
                 && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.SMTP_PASS.getKey()))) {
-            props.put(MAIL_SMTP_PASSWORD, settings.get(EnumEmailSettingKeys.SMTP_PASS.getKey()));
+            props.put(MAIL + PROTOCOL_SMTP + MAIL_PROTOCOL_PASSWORD, settings.get(EnumEmailSettingKeys.SMTP_PASS.getKey()));
         }
 
         if (settings.containsKey(EnumEmailSettingKeys.SMTP_FROM.getKey())
                 && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.SMTP_FROM.getKey()))) {
-            props.put(MAIL_SMTP_FROM, settings.get(EnumEmailSettingKeys.SMTP_FROM.getKey()));
+            props.put(MAIL + PROTOCOL_SMTP + MAIL_PROTOCOL_FROM, settings.get(EnumEmailSettingKeys.SMTP_FROM.getKey()));
         }
 
         if (settings.containsKey(EnumEmailSettingKeys.SMTP_FROMNAME.getKey())
                 && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.SMTP_FROMNAME.getKey()))) {
-            props.put(MAIL_SMTP_FROMNAME, settings.get(EnumEmailSettingKeys.SMTP_FROMNAME.getKey()));
+            props.put(MAIL + PROTOCOL_SMTP + MAIL_PROTOCOL_FROMNAME, settings.get(EnumEmailSettingKeys.SMTP_FROMNAME.getKey()));
         }
 
         if (settings.containsKey(EnumEmailSettingKeys.SMTP_SSL_ENABLED.getKey())
                 && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.SMTP_SSL_ENABLED.getKey()))
-                && Boolean.getBoolean(settings.get(EnumEmailSettingKeys.SMTP_SSL_ENABLED.getKey()))) {
+                && Boolean.parseBoolean(settings.get(EnumEmailSettingKeys.SMTP_SSL_ENABLED.getKey()))) {
 
-            props.put(MAIL_SMTP_SSL_ENABLE, Boolean.TRUE);
+            props.put(MAIL + PROTOCOL_SMTP + MAIL_PROTOCOL_SSL_ENABLE, Boolean.TRUE);
             props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
             props.put("mail.smtp.auth", "true");
             if (settings.containsKey(EnumEmailSettingKeys.SMTP_SOCKET_FACTORY_PORT.getKey())) {
-                props.put(MAIL_SMTP_SOCKET_FACTORY_PORT, settings.get(EnumEmailSettingKeys.SMTP_SOCKET_FACTORY_PORT.getKey()));
+                props.put(MAIL + PROTOCOL_SMTP + MAIL_PROTOCOL_SOCKET_FACTORY_PORT, settings.get(EnumEmailSettingKeys.SMTP_SOCKET_FACTORY_PORT.getKey()));
             } else {
                 if (settings.containsKey(EnumEmailSettingKeys.SMTP_PORT.getKey())
                         && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.SMTP_PORT.getKey()))) {
-                    props.put(MAIL_SMTP_SOCKET_FACTORY_PORT, settings.get(EnumEmailSettingKeys.SMTP_PORT.getKey()));
+                    props.put(MAIL + PROTOCOL_SMTP + MAIL_PROTOCOL_SOCKET_FACTORY_PORT, settings.get(EnumEmailSettingKeys.SMTP_PORT.getKey()));
                 }
             }
         } else {
             //check TLS
-            if (settings.containsKey(EnumEmailSettingKeys.TRANSPORT_TLS.getKey())
-                    && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.TRANSPORT_TLS.getKey()))) {
-                if (Boolean.getBoolean(settings.get(EnumEmailSettingKeys.TRANSPORT_TLS.getKey()))) {
-                    props.put(MAIL_TRANSPORT_TLS, Boolean.TRUE);
-                    props.put("mail.smtp.auth", "true");
+            if (settings.containsKey(EnumEmailSettingKeys.SMTP_STARTTLS.getKey())
+                    && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.SMTP_STARTTLS.getKey()))) {
+                String starttls = settings.get(EnumEmailSettingKeys.SMTP_STARTTLS.getKey());
+                if (Boolean.parseBoolean(starttls)) {
+                    props.put(MAIL + PROTOCOL_SMTP + MAIL_PROTOCOL_STARTTLS, "true");
+                    props.put(MAIL + PROTOCOL_SMTP + ".socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+                    props.put(MAIL + PROTOCOL_SMTP + MAIL_PROTOCOL_AUTH, "true");
+                    props.put(MAIL + PROTOCOL_SMTP + ".ssl.trust", "*");
                 } else {
-                    props.put(MAIL_TRANSPORT_TLS, Boolean.FALSE);
+                    props.put(MAIL + PROTOCOL_SMTP + MAIL_PROTOCOL_STARTTLS, "false");
                 }
             }
         }
 
         if (settings.containsKey(EnumEmailSettingKeys.SMTP_CONNECTIONTIMEOUT.getKey())
                 && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.SMTP_CONNECTIONTIMEOUT.getKey()))) {
-            props.put(MAIL_SMTP_CONNECTIONTIMEOUT, settings.get(EnumEmailSettingKeys.SMTP_CONNECTIONTIMEOUT.getKey()));
+            props.put(MAIL + PROTOCOL_SMTP + MAIL_PROTOCOL_CONNECTIONTIMEOUT, settings.get(EnumEmailSettingKeys.SMTP_CONNECTIONTIMEOUT.getKey()));
         }
 
         if (settings.containsKey(EnumEmailSettingKeys.SMTP_TIMEOUT.getKey())
                 && StringUtils.isNotEmpty(settings.get(EnumEmailSettingKeys.SMTP_TIMEOUT.getKey()))) {
-            props.put(MAIL_SMTP_TIMEOUT, settings.get(EnumEmailSettingKeys.SMTP_TIMEOUT.getKey()));
+            props.put(MAIL + PROTOCOL_SMTP + MAIL_PROTOCOL_TIMEOUT, settings.get(EnumEmailSettingKeys.SMTP_TIMEOUT.getKey()));
         }
 
         if (settings.containsKey(EnumEmailSettingKeys.TRANSPORT_PROTOCOL.getKey())
