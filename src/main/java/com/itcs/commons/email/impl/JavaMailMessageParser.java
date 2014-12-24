@@ -8,6 +8,8 @@ import com.itcs.commons.email.EmailMessage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.text.Normalizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.mail.Address;
@@ -19,7 +21,7 @@ import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimeUtility;
 import javax.mail.internet.ParseException;
 import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.commons.mail.EmailAttachment;
@@ -33,8 +35,10 @@ public class JavaMailMessageParser {
     public static final String EXTRACT_MAIL_REGEXP = "(.*?)<([^>]+)>\\s*,?";
     public static final String MAIL_VALIDATOR_REGEXP = "[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\\.)+[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws UnsupportedEncodingException {
         JavaMailMessageParser jmmp = new JavaMailMessageParser();
+        String nameA = jmmp.normalizeName("=?UTF-8?Q?Pedido_de_compra_N=C2=B0_6501683684=2Epdf?=");
+        System.out.println("name: "+nameA);
         String emailAdress = "\"pico pal que lee\" <daniel.sanchez@e-puntaarenas.cl>\"";
         System.out.println("Es un correo valido: " + emailAdress.matches(MAIL_VALIDATOR_REGEXP));
         Pattern p = Pattern.compile(EXTRACT_MAIL_REGEXP, Pattern.DOTALL);
@@ -48,12 +52,12 @@ public class JavaMailMessageParser {
             System.out.println("email: " + email);
         }
     }
-    
+
     public EmailMessage parseOnlyHeader(Session session, Message message) throws MessagingException {
         return parse(session, message, false);
     }
-    
-    private EmailMessage parse(Session session, Message message, boolean download) throws MessagingException{
+
+    private EmailMessage parse(Session session, Message message, boolean download) throws MessagingException {
         /*
          * Using isMimeType to determine the content type avoids
          * fetching the actual content data until we need it.
@@ -95,8 +99,7 @@ public class JavaMailMessageParser {
             } else if (processMimeMessage((MimeMessage) message, "multipart/*")) {
 
                 long startTime = System.currentTimeMillis();
-                if(download)
-                {
+                if (download) {
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     message.writeTo(bos);
                     bos.close();
@@ -107,13 +110,11 @@ public class JavaMailMessageParser {
                     Multipart multipart = (Multipart) cmsg.getContent();
                     analyzeMultipart(multipart, emailMessage, download);
                     bis.close();
-                }
-                else
-                {
-                    analyzeMultipart((Multipart)message.getContent(), emailMessage, download);
+                } else {
+                    analyzeMultipart((Multipart) message.getContent(), emailMessage, download);
                 }
                 long totalTime = System.currentTimeMillis() - startTime;
-                System.out.println("totalTime: "+ (((float)totalTime)/1000f)+" seg.");
+                System.out.println("totalTime: " + (((float) totalTime) / 1000f) + " seg.");
             } else {
                 /*
                  * If we actually want to see the data, and it's not a
@@ -172,13 +173,14 @@ public class JavaMailMessageParser {
             String disposition = null;
             try {
                 disposition = bodypart.getDisposition();
-            } catch (ParseException ex) {/*can throw a parseException, this is a normal behaviour*/}
+            } catch (ParseException ex) {/*can throw a parseException, this is a normal behaviour*/
+
+            }
             // many mailers don't include a Content-Disposition
             if (disposition != null && disposition.equalsIgnoreCase(Part.ATTACHMENT)) {
-                String filename = bodypart.getFileName();
+                String filename = normalizeName(bodypart.getFileName());
                 EmailAttachment att = new EmailAttachment();
-                if(download)
-                {
+                if (download) {
                     InputStream is = bodypart.getInputStream();
                     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
                     int nRead;
@@ -199,8 +201,7 @@ public class JavaMailMessageParser {
             } else if (bodypart.isMimeType("image/*")) {
                 EmailAttachment attachment = new EmailAttachment();
                 attachment.setContentId(((MimeBodyPart) bodypart).getContentID());
-                if(download)
-                {
+                if (download) {
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     InputStream imageInputStream = bodypart.getInputStream();
                     byte[] bytes = new byte[131072];
@@ -212,9 +213,11 @@ public class JavaMailMessageParser {
                     attachment.setData(baos.toByteArray());
                 }
 
-                try{
-                    attachment.setName(bodypart.getFileName());
-                }catch(Exception ex){/*do nothing, can be a parseException*/}
+                try {
+                    attachment.setName(normalizeName(bodypart.getFileName()));
+                } catch (Exception ex) {/*do nothing, can be a parseException*/
+
+                }
                 if (attachment.getName() == null) {
                     int startIndex = bodypart.getContentType().indexOf('/');
                     attachment.setName("image." + bodypart.getContentType().substring(startIndex + 1).toLowerCase());
@@ -233,5 +236,10 @@ public class JavaMailMessageParser {
             }
 
         }
+    }
+
+    public String normalizeName(String originalName) throws UnsupportedEncodingException {
+        String decoded = MimeUtility.decodeText(originalName);
+        return Normalizer.normalize(decoded, Normalizer.Form.NFC);
     }
 }
