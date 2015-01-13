@@ -24,6 +24,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
 import javax.mail.internet.ParseException;
 import javax.mail.util.SharedByteArrayInputStream;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.mail.EmailAttachment;
 
 /**
@@ -239,6 +240,9 @@ public class JavaMailMessageParser {
     }
 
     public String normalizeName(String originalName) throws UnsupportedEncodingException {
+        if(StringUtils.isEmpty(originalName)){
+            return "";
+        }
         String decoded = MimeUtility.decodeText(originalName);
         return Normalizer.normalize(decoded, Normalizer.Form.NFC);
     }
