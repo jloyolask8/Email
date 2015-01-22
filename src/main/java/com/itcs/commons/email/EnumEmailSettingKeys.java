@@ -44,6 +44,7 @@ public enum EnumEmailSettingKeys {
     MAIL_SERVER_TYPE_SALIDA("mail_server_type_salida"),
     DOWNLOAD_ATTACHMENTS("download_attachments"),
     HIGHEST_UID("hightest_uid"),
+    UNREAD_DOWNLOAD_LIMIT("unread_download_limit"),
     SMTP_SSL_ENABLED("mail_smtp_ssl_enable");
     
     private final String key;

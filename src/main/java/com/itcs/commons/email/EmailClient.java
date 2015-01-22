@@ -71,6 +71,7 @@ public interface EmailClient {
     EmailMessage getMessage(long id) throws MessagingException;
     
     List<EmailMessage> getUnreadMessagesOnlyHeaders() throws EmailException, MessagingException;
+    List<EmailMessage> getUnreadMessagesOnlyHeaders(int limit) throws EmailException, MessagingException;
     
     List<EmailMessage> getMessagesOnlyHeaders(long firtsuid, long lastuid) throws EmailException, MessagingException;
     

@@ -420,4 +420,9 @@ public class ExchangeEmailClientImpl implements EmailClient {
     public List<EmailMessage> getMessagesOnlyHeaders(long firstuid, long lastuid) throws EmailException, MessagingException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+    @Override
+    public List<EmailMessage> getUnreadMessagesOnlyHeaders(int limit) throws EmailException, MessagingException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }

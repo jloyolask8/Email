@@ -8,6 +8,8 @@ import com.itcs.commons.email.EmailClient;
 import static com.itcs.commons.email.EmailClient.DISABLE_MAX_ATTACHMENTS_SIZE;
 import static com.itcs.commons.email.EmailClient.MAX_ATTACHMENTS_SIZE_PROP_NAME;
 import com.itcs.commons.email.EmailMessage;
+import com.sun.mail.imap.IMAPFolder;
+import com.sun.mail.imap.SortTerm;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,7 +26,9 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.UIDFolder;
+import javax.mail.search.AndTerm;
 import javax.mail.search.FlagTerm;
+import javax.mail.search.SearchTerm;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import org.apache.commons.mail.DefaultAuthenticator;
@@ -84,15 +88,15 @@ public class PopImapEmailClientImpl implements EmailClient {
                 username = mailConnectionProps.getProperty(Email.MAIL_SMTP_USER);
                 password = mailConnectionProps.getProperty(Email.MAIL_SMTP_PASSWORD);
 
-            // only create a new mail session with an authenticator if
+                // only create a new mail session with an authenticator if
                 // authentication is required and no user name is given
                 mailSession = Session.getInstance(mailConnectionProps, new DefaultAuthenticator(username, password));
 
             }
-            
+
             Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "created New JavaMail Session: {0}", mailSession);
-            
-        }else{
+
+        } else {
             Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Using existing JavaMail Session: {0}", mailSession);
         }
 
@@ -155,7 +159,7 @@ public class PopImapEmailClientImpl implements EmailClient {
     public int getUnreadMessageCount() throws EmailException, MessagingException {
         return folder.getUnreadMessageCount();
     }
-    
+
     @Override
     public List<EmailMessage> getUnreadMessagesOnlyHeaders() throws EmailException, MessagingException {
         List<EmailMessage> result = new LinkedList<EmailMessage>();
@@ -164,30 +168,94 @@ public class PopImapEmailClientImpl implements EmailClient {
         Message[] msgs = folder.search(ft);
         for (Message msg : msgs) {
             EmailMessage parsedMessage = parser.parseOnlyHeader(mailSession, msg);
-            parsedMessage.setIdMessage(((UIDFolder)msg.getFolder()).getUID(msg));
+            parsedMessage.setIdMessage(((UIDFolder) msg.getFolder()).getUID(msg));
             result.add(parsedMessage);
         }
         return result;
     }
+
+    private Message[] getUnseenReverseSortedMessages() {
+        try {
+            FlagTerm ft = new FlagTerm(new Flags(Flags.Flag.SEEN), false);
+            if (!folder.isOpen()) {
+                folder.open(Folder.READ_WRITE);
+            }
+            return ((IMAPFolder) folder).getSortedMessages(new SortTerm[]{SortTerm.REVERSE}, ft);
+        } catch (MessagingException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
     
+    private Message[] getUnseenMessages() {
+        try {
+            FlagTerm ft = new FlagTerm(new Flags(Flags.Flag.SEEN), false);
+            if (!folder.isOpen()) {
+                folder.open(Folder.READ_WRITE);
+            }
+            return folder.search(ft);
+        } catch (MessagingException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    private Message[] getRecentMessages() {
+        try {
+            FlagTerm ft = new FlagTerm(new Flags(Flags.Flag.RECENT), true);
+            if (!folder.isOpen()) {
+                folder.open(Folder.READ_WRITE);
+            }
+            return ((IMAPFolder) folder).search(ft);
+        } catch (MessagingException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public List<EmailMessage> getUnreadMessagesOnlyHeaders(int limit) throws EmailException, MessagingException {
+        List<EmailMessage> result = new LinkedList<>();
+        JavaMailMessageParser parser = new JavaMailMessageParser();
+        Message[] msgs = getUnseenReverseSortedMessages();
+        if (msgs == null) {
+            msgs = getUnseenMessages();
+        }
+//        Message[] msgs = folder.search(ft);
+        int messageCount = 0;
+        for (Message msg : msgs) {
+            EmailMessage parsedMessage = parser.parseOnlyHeader(mailSession, msg);
+            parsedMessage.setIdMessage(((UIDFolder) msg.getFolder()).getUID(msg));
+            result.add(parsedMessage);
+            messageCount += 1;
+            if (messageCount >= limit) {
+                break;
+            }
+        }
+        return result;
+    }
+
     @Override
     public List<EmailMessage> getMessagesOnlyHeaders(long firstuid, long lastuid) throws EmailException, MessagingException {
         List<EmailMessage> result = new LinkedList<EmailMessage>();
         JavaMailMessageParser parser = new JavaMailMessageParser();
-        Message[] msgs = ((UIDFolder)folder).getMessagesByUID(firstuid, lastuid);
+        Message[] msgs = ((UIDFolder) folder).getMessagesByUID(firstuid, lastuid);
+        if(msgs.length == 0){
+            lastuid = ((IMAPFolder) folder).getUIDNext();
+            msgs = ((IMAPFolder) folder).getMessagesByUID(firstuid, lastuid);
+        }
         for (Message msg : msgs) {
             EmailMessage parsedMessage = parser.parseOnlyHeader(mailSession, msg);
-            parsedMessage.setIdMessage(((UIDFolder)msg.getFolder()).getUID(msg));
+            parsedMessage.setIdMessage(((UIDFolder) msg.getFolder()).getUID(msg));
             result.add(parsedMessage);
         }
         return result;
     }
-    
+
     @Override
-    public EmailMessage getMessage(long id) throws MessagingException
-    {
+    public EmailMessage getMessage(long id) throws MessagingException {
         JavaMailMessageParser parser = new JavaMailMessageParser();
-        return parser.parse(mailSession, ((UIDFolder)folder).getMessageByUID(id));
+        return parser.parse(mailSession, ((UIDFolder) folder).getMessageByUID(id));
     }
 
     /**
