@@ -217,13 +217,12 @@ public class PopImapEmailClientImpl implements EmailClient {
     public List<EmailMessage> getUnreadMessagesOnlyHeaders(int limit) throws EmailException, MessagingException {
         List<EmailMessage> result = new LinkedList<>();
         JavaMailMessageParser parser = new JavaMailMessageParser();
-        Message[] msgs = getUnseenReverseSortedMessages();
-        if (msgs == null) {
-            msgs = getUnseenMessages();
-        }
+        Message[] msgs = getUnseenMessages();
 //        Message[] msgs = folder.search(ft);
         int messageCount = 0;
-        for (Message msg : msgs) {
+        
+        for (int i = (msgs.length-1); i >= 0; i--) {
+            Message msg = msgs[i]; 
             EmailMessage parsedMessage = parser.parseOnlyHeader(mailSession, msg);
             parsedMessage.setIdMessage(((UIDFolder) msg.getFolder()).getUID(msg));
             result.add(parsedMessage);
