@@ -6,6 +6,7 @@ package com.itcs.commons.email;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import org.apache.commons.mail.EmailAttachment;
 
@@ -23,6 +24,7 @@ public class EmailMessage implements Serializable {
     private String text;
     private String fromName;
     private String fromEmail;
+    private Date receivedDate;
     
     private int parts = 0;
     private List<EmailAttachment> attachments = new ArrayList<EmailAttachment>();
@@ -193,6 +195,20 @@ public class EmailMessage implements Serializable {
      */
     public void setIdMessage(long idMessage) {
         this.idMessage = idMessage;
+    }
+
+    /**
+     * @return the receivedDate
+     */
+    public Date getReceivedDate() {
+        return receivedDate;
+    }
+
+    /**
+     * @param receivedDate the receivedDate to set
+     */
+    public void setReceivedDate(Date receivedDate) {
+        this.receivedDate = receivedDate;
     }
 
    

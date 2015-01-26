@@ -68,6 +68,7 @@ public class JavaMailMessageParser {
         EmailMessage emailMessage = new EmailMessage(message);
         emailMessage.setIdMessage(message.getMessageNumber());
         emailMessage.setSubject(message.getSubject());
+        emailMessage.setReceivedDate(message.getReceivedDate());
 
         Pattern p = Pattern.compile(EXTRACT_MAIL_REGEXP, Pattern.DOTALL);
         Address[] fromAddresses = message.getFrom();

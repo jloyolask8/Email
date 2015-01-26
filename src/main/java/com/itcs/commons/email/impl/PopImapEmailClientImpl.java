@@ -10,6 +10,7 @@ import static com.itcs.commons.email.EmailClient.MAX_ATTACHMENTS_SIZE_PROP_NAME;
 import com.itcs.commons.email.EmailMessage;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.SortTerm;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,7 +28,9 @@ import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.UIDFolder;
 import javax.mail.search.AndTerm;
+import javax.mail.search.DateTerm;
 import javax.mail.search.FlagTerm;
+import javax.mail.search.ReceivedDateTerm;
 import javax.mail.search.SearchTerm;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -186,7 +189,7 @@ public class PopImapEmailClientImpl implements EmailClient {
         }
         return null;
     }
-    
+
     private Message[] getUnseenMessages() {
         try {
             FlagTerm ft = new FlagTerm(new Flags(Flags.Flag.SEEN), false);
@@ -200,9 +203,9 @@ public class PopImapEmailClientImpl implements EmailClient {
         return null;
     }
 
-    private Message[] getRecentMessages() {
+    private Message[] getRecentMessages(Date date) {
         try {
-            FlagTerm ft = new FlagTerm(new Flags(Flags.Flag.RECENT), true);
+            SearchTerm ft = new ReceivedDateTerm(DateTerm.GT, date);
             if (!folder.isOpen()) {
                 folder.open(Folder.READ_WRITE);
             }
@@ -220,9 +223,9 @@ public class PopImapEmailClientImpl implements EmailClient {
         Message[] msgs = getUnseenMessages();
 //        Message[] msgs = folder.search(ft);
         int messageCount = 0;
-        
-        for (int i = (msgs.length-1); i >= 0; i--) {
-            Message msg = msgs[i]; 
+
+        for (int i = (msgs.length - 1); i >= 0; i--) {
+            Message msg = msgs[i];
             EmailMessage parsedMessage = parser.parseOnlyHeader(mailSession, msg);
             parsedMessage.setIdMessage(((UIDFolder) msg.getFolder()).getUID(msg));
             result.add(parsedMessage);
@@ -239,10 +242,19 @@ public class PopImapEmailClientImpl implements EmailClient {
         List<EmailMessage> result = new LinkedList<EmailMessage>();
         JavaMailMessageParser parser = new JavaMailMessageParser();
         Message[] msgs = ((UIDFolder) folder).getMessagesByUID(firstuid, lastuid);
-        if(msgs.length == 0){
-            lastuid = ((IMAPFolder) folder).getUIDNext();
-            msgs = ((IMAPFolder) folder).getMessagesByUID(firstuid, lastuid);
+        long lastuidFolder = ((IMAPFolder) folder).getUIDNext();
+        while (msgs.length == 0) {
+            if (firstuid > lastuidFolder) {
+                break;
+            }
+            firstuid = lastuid;
+            lastuid += 10;
+            msgs = ((UIDFolder) folder).getMessagesByUID(firstuid, lastuid);
         }
+//        if(msgs.length == 0){
+//            lastuid = ((IMAPFolder) folder).getUIDNext();
+//            msgs = ((IMAPFolder) folder).getMessagesByUID(firstuid, lastuid);
+//        }
         for (Message msg : msgs) {
             EmailMessage parsedMessage = parser.parseOnlyHeader(mailSession, msg);
             parsedMessage.setIdMessage(((UIDFolder) msg.getFolder()).getUID(msg));
