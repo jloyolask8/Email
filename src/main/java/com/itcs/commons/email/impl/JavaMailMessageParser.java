@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.text.Normalizer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.mail.Address;
@@ -36,10 +38,12 @@ public class JavaMailMessageParser {
     public static final String EXTRACT_MAIL_REGEXP = "(.*?)<([^>]+)>\\s*,?";
     public static final String MAIL_VALIDATOR_REGEXP = "[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\\.)+[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?";
 
+    private final Pattern p = Pattern.compile(EXTRACT_MAIL_REGEXP, Pattern.DOTALL);
+
     public static void main(String[] args) throws UnsupportedEncodingException {
         JavaMailMessageParser jmmp = new JavaMailMessageParser();
         String nameA = jmmp.normalizeName("=?UTF-8?Q?Pedido_de_compra_N=C2=B0_6501683684=2Epdf?=");
-        System.out.println("name: "+nameA);
+        System.out.println("name: " + nameA);
         String emailAdress = "\"pico pal que lee\" <daniel.sanchez@e-puntaarenas.cl>\"";
         System.out.println("Es un correo valido: " + emailAdress.matches(MAIL_VALIDATOR_REGEXP));
         Pattern p = Pattern.compile(EXTRACT_MAIL_REGEXP, Pattern.DOTALL);
@@ -58,6 +62,21 @@ public class JavaMailMessageParser {
         return parse(session, message, false);
     }
 
+    private String extractEmail(Address address) {
+        final String toString = address.toString();
+        if (toString.matches(MAIL_VALIDATOR_REGEXP)) {
+            return toString;
+        } else {
+            Matcher matcher = p.matcher(toString);
+            if (matcher.find()) {
+                String email = matcher.group(2).replaceAll("[\\n\\r]+", "");
+                return email;
+            }
+        }
+        
+        return null;
+    }
+
     private EmailMessage parse(Session session, Message message, boolean download) throws MessagingException {
         /*
          * Using isMimeType to determine the content type avoids
@@ -69,8 +88,20 @@ public class JavaMailMessageParser {
         emailMessage.setIdMessage(message.getMessageNumber());
         emailMessage.setSubject(message.getSubject());
         emailMessage.setReceivedDate(message.getReceivedDate());
+        Address[] cc = message.getRecipients(Message.RecipientType.CC);
+        List<String> emailscc = new ArrayList<>(cc.length);
+        for (Address email : cc) {
+            emailscc.add(extractEmail(email));
+        }
+        emailMessage.setCcList(emailscc);
 
-        Pattern p = Pattern.compile(EXTRACT_MAIL_REGEXP, Pattern.DOTALL);
+        Address[] toAddresses = message.getRecipients(Message.RecipientType.TO);
+        List<String> emailsto = new ArrayList<>(toAddresses.length);
+        for (Address email : toAddresses) {
+            emailsto.add(extractEmail(email));
+        }
+        emailMessage.setToList(emailsto);
+
         Address[] fromAddresses = message.getFrom();
         if (fromAddresses.length >= 1) {
 
@@ -241,7 +272,7 @@ public class JavaMailMessageParser {
     }
 
     public String normalizeName(String originalName) throws UnsupportedEncodingException {
-        if(StringUtils.isEmpty(originalName)){
+        if (StringUtils.isEmpty(originalName)) {
             return "";
         }
         String decoded = MimeUtility.decodeText(originalName);

@@ -24,10 +24,12 @@ public class EmailMessage implements Serializable {
     private String text;
     private String fromName;
     private String fromEmail;
+    private List<String> ccList;
+    private List<String> toList;
     private Date receivedDate;
-    
+
     private int parts = 0;
-    private List<EmailAttachment> attachments = new ArrayList<EmailAttachment>();
+    private List<EmailAttachment> attachments = new ArrayList<>();
 
     /**
      *
@@ -175,11 +177,10 @@ public class EmailMessage implements Serializable {
         sb.append("Parts:").append(this.getParts()).append("\n");
         sb.append("Body/Text:").append("\n").append(this.getText()).append("\n");
         sb.append("\n---Attachments:").append(getAttachments().size()).append("\n");
-        for(EmailAttachment att : getAttachments()){
-         sb.append("Name:").append(att.getName()).append("\n");    
+        for (EmailAttachment att : getAttachments()) {
+            sb.append("Name:").append(att.getName()).append("\n");
         }
-        
-        
+
         return sb.toString();
     }
 
@@ -211,5 +212,32 @@ public class EmailMessage implements Serializable {
         this.receivedDate = receivedDate;
     }
 
-   
+    /**
+     * @return the ccList
+     */
+    public List<String> getCcList() {
+        return ccList;
+    }
+
+    /**
+     * @param ccList the ccList to set
+     */
+    public void setCcList(List<String> ccList) {
+        this.ccList = ccList;
+    }
+
+    /**
+     * @return the toList
+     */
+    public List<String> getToList() {
+        return toList;
+    }
+
+    /**
+     * @param toList the toList to set
+     */
+    public void setToList(List<String> toList) {
+        this.toList = toList;
+    }
+
 }
