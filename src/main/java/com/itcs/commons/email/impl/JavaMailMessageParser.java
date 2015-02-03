@@ -73,7 +73,7 @@ public class JavaMailMessageParser {
                 return email;
             }
         }
-        
+
         return null;
     }
 
@@ -89,18 +89,23 @@ public class JavaMailMessageParser {
         emailMessage.setSubject(message.getSubject());
         emailMessage.setReceivedDate(message.getReceivedDate());
         Address[] cc = message.getRecipients(Message.RecipientType.CC);
-        List<String> emailscc = new ArrayList<>(cc.length);
-        for (Address email : cc) {
-            emailscc.add(extractEmail(email));
+
+        if (cc != null) {
+            List<String> emailscc = new ArrayList<>(cc.length);
+            for (Address email : cc) {
+                emailscc.add(extractEmail(email));
+            }
+            emailMessage.setCcList(emailscc);
         }
-        emailMessage.setCcList(emailscc);
 
         Address[] toAddresses = message.getRecipients(Message.RecipientType.TO);
-        List<String> emailsto = new ArrayList<>(toAddresses.length);
-        for (Address email : toAddresses) {
-            emailsto.add(extractEmail(email));
+        if (toAddresses != null) {
+            List<String> emailsto = new ArrayList<>(toAddresses.length);
+            for (Address email : toAddresses) {
+                emailsto.add(extractEmail(email));
+            }
+            emailMessage.setToList(emailsto);
         }
-        emailMessage.setToList(emailsto);
 
         Address[] fromAddresses = message.getFrom();
         if (fromAddresses.length >= 1) {
