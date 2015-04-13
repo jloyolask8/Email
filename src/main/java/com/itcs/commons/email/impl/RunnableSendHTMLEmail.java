@@ -86,7 +86,7 @@ public class RunnableSendHTMLEmail implements Runnable {
                 addAttachments(email, attachments);
             }
             email.send();
-            Logger.getLogger(RunnableSendHTMLEmail.class.getName()).log(Level.INFO, "Email sended successfully to:{0} cc:{1} bcc:{2}", new Object[]{Arrays.toString(to), Arrays.toString(cc), Arrays.toString(cco)});
+            Logger.getLogger(RunnableSendHTMLEmail.class.getName()).log(Level.INFO, "Email sent successfully to:{0} cc:{1} bcc:{2}", new Object[]{Arrays.toString(to), Arrays.toString(cc), Arrays.toString(cco)});
         } catch (EmailException e) {
             Logger.getLogger(RunnableSendHTMLEmail.class.getName()).log(Level.SEVERE, "EmailException Error sending email... with properties:\n" + session.getProperties(), e);
         }

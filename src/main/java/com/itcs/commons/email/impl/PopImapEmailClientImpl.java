@@ -97,10 +97,10 @@ public class PopImapEmailClientImpl implements EmailClient {
 
             }
 
-            Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "created New JavaMail Session: {0}", mailSession);
+//            Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "getting email Session. created New JavaMail Session: {0} properties: {1}", new Object[]{mailSession, mailConnectionProps.toString()});
 
-        } else {
-            Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Using existing JavaMail Session: {0}", mailSession);
+//        } else {
+//            Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "getting email Session. Using existing JavaMail Session: {0} properties: {1}", new Object[]{mailSession, mailConnectionProps.toString()});
         }
 
         return mailSession;
@@ -132,6 +132,7 @@ public class PopImapEmailClientImpl implements EmailClient {
      * @throws javax.mail.MessagingException
      *
      */
+    @Override
     public void disconnectStore() throws Exception {
         if (store != null && store.isConnected()) {
             store.close();
@@ -165,7 +166,7 @@ public class PopImapEmailClientImpl implements EmailClient {
 
     @Override
     public List<EmailMessage> getUnreadMessagesOnlyHeaders() throws EmailException, MessagingException {
-        List<EmailMessage> result = new LinkedList<EmailMessage>();
+        List<EmailMessage> result = new LinkedList<>();
         FlagTerm ft = new FlagTerm(new Flags(Flags.Flag.SEEN), false);
         JavaMailMessageParser parser = new JavaMailMessageParser();
         Message[] msgs = folder.search(ft);
@@ -174,6 +175,7 @@ public class PopImapEmailClientImpl implements EmailClient {
             parsedMessage.setIdMessage(((UIDFolder) msg.getFolder()).getUID(msg));
             result.add(parsedMessage);
         }
+        Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Got {0} UnreadMessagesOnlyHeaders", result.size());
         return result;
     }
 
@@ -218,6 +220,7 @@ public class PopImapEmailClientImpl implements EmailClient {
 
     @Override
     public List<EmailMessage> getUnreadMessagesOnlyHeaders(int limit) throws EmailException, MessagingException {
+        Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Getting Message Headers");
         List<EmailMessage> result = new LinkedList<>();
         JavaMailMessageParser parser = new JavaMailMessageParser();
         Message[] msgs = getUnseenMessages();
@@ -234,12 +237,13 @@ public class PopImapEmailClientImpl implements EmailClient {
                 break;
             }
         }
+        Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Got {0} Message Headers", result.size());
         return result;
     }
 
     @Override
     public List<EmailMessage> getMessagesOnlyHeaders(long firstuid, long lastuid) throws EmailException, MessagingException {
-        List<EmailMessage> result = new LinkedList<EmailMessage>();
+        List<EmailMessage> result = new LinkedList<>();
         JavaMailMessageParser parser = new JavaMailMessageParser();
         Message[] msgs = ((UIDFolder) folder).getMessagesByUID(firstuid, lastuid);
         long lastuidFolder = ((IMAPFolder) folder).getUIDNext();
@@ -260,6 +264,7 @@ public class PopImapEmailClientImpl implements EmailClient {
             parsedMessage.setIdMessage(((UIDFolder) msg.getFolder()).getUID(msg));
             result.add(parsedMessage);
         }
+        Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Got {0} MessagesOnlyHeaders", result.size());
         return result;
     }
 
@@ -276,7 +281,7 @@ public class PopImapEmailClientImpl implements EmailClient {
      */
     @Override
     public List<EmailMessage> getUnreadMessages() throws EmailException, MessagingException {
-        List<EmailMessage> result = new LinkedList<EmailMessage>();
+        List<EmailMessage> result = new LinkedList<>();
         FlagTerm ft = new FlagTerm(new Flags(Flags.Flag.SEEN), false);
         JavaMailMessageParser parser = new JavaMailMessageParser();
         Message[] msgs = folder.search(ft);
@@ -284,18 +289,21 @@ public class PopImapEmailClientImpl implements EmailClient {
 //            printHeaders(m);
             result.add(parser.parse(mailSession, m));
         }
+
+        Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Got {0} UnreadMessages", result.size());
         return result;
     }
 
     @Override
     public List<EmailMessage> getAllMessages() throws EmailException, MessagingException {
-        List<EmailMessage> result = new LinkedList<EmailMessage>();
+        List<EmailMessage> result = new LinkedList<>();
         JavaMailMessageParser parser = new JavaMailMessageParser();
         Message[] msgs = folder.getMessages();
         for (Message m : msgs) {
 //            printHeaders(m);
             result.add(parser.parse(mailSession, m));
         }
+        Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Got {0} AllMessages", result.size());
         return result;
     }
 
