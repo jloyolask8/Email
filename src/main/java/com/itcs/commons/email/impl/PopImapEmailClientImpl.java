@@ -175,7 +175,7 @@ public class PopImapEmailClientImpl implements EmailClient {
             parsedMessage.setIdMessage(((UIDFolder) msg.getFolder()).getUID(msg));
             result.add(parsedMessage);
         }
-        Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Got {0} UnreadMessagesOnlyHeaders", result.size());
+//        Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Got {0} UnreadMessagesOnlyHeaders", result.size());
         return result;
     }
 
@@ -220,7 +220,7 @@ public class PopImapEmailClientImpl implements EmailClient {
 
     @Override
     public List<EmailMessage> getUnreadMessagesOnlyHeaders(int limit) throws EmailException, MessagingException {
-        Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Getting Message Headers");
+//        Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Getting Message Headers");
         List<EmailMessage> result = new LinkedList<>();
         JavaMailMessageParser parser = new JavaMailMessageParser();
         Message[] msgs = getUnseenMessages();
@@ -237,7 +237,7 @@ public class PopImapEmailClientImpl implements EmailClient {
                 break;
             }
         }
-        Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Got {0} Message Headers", result.size());
+//        Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Got {0} Message Headers", result.size());
         return result;
     }
 
@@ -264,7 +264,7 @@ public class PopImapEmailClientImpl implements EmailClient {
             parsedMessage.setIdMessage(((UIDFolder) msg.getFolder()).getUID(msg));
             result.add(parsedMessage);
         }
-        Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Got {0} MessagesOnlyHeaders", result.size());
+//        Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Got {0} MessagesOnlyHeaders", result.size());
         return result;
     }
 
@@ -290,7 +290,7 @@ public class PopImapEmailClientImpl implements EmailClient {
             result.add(parser.parse(mailSession, m));
         }
 
-        Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Got {0} UnreadMessages", result.size());
+//        Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Got {0} UnreadMessages", result.size());
         return result;
     }
 
@@ -303,7 +303,7 @@ public class PopImapEmailClientImpl implements EmailClient {
 //            printHeaders(m);
             result.add(parser.parse(mailSession, m));
         }
-        Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Got {0} AllMessages", result.size());
+//        Logger.getLogger(PopImapEmailClientImpl.class.getName()).log(Level.INFO, "Got {0} AllMessages", result.size());
         return result;
     }
 
