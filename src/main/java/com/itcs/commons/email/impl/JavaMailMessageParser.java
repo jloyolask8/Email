@@ -5,9 +5,12 @@
 package com.itcs.commons.email.impl;
 
 import com.itcs.commons.email.EmailMessage;
+import com.sun.mail.util.QPDecoderStream;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.text.Normalizer;
 import java.util.ArrayList;
@@ -130,8 +133,17 @@ public class JavaMailMessageParser {
 
         try {
             if (processMimeMessage((MimeMessage) message, "text/*")) {
-                String s = (String) message.getContent();
-                emailMessage.setText(s);
+                String content = "";
+                if (message.getContent() instanceof String) {
+                    content = (String) message.getContent();
+                } else if (message.getContent() instanceof QPDecoderStream) {
+                    InputStream is = ((QPDecoderStream) message.getContent());
+                    content = getStringFromInputStream(is);
+                }else{
+                    content = "MailReaderParser: no decoder found to read message content.";
+                }
+
+                emailMessage.setText(content);
                 emailMessage.setTextIsHtml(processMimeMessage((MimeMessage) message, "text/html"));
 
             } else if (processMimeMessage((MimeMessage) message, "multipart/*")) {
@@ -170,6 +182,36 @@ public class JavaMailMessageParser {
         }
 
         return emailMessage;
+    }
+
+    // convert InputStream to String
+    private String getStringFromInputStream(InputStream is) {
+
+        BufferedReader br = null;
+        StringBuilder sb = new StringBuilder();
+
+        String line;
+        try {
+
+            br = new BufferedReader(new InputStreamReader(is));
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return sb.toString();
+
     }
 
     /**
